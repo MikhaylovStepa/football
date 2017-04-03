@@ -1,54 +1,19 @@
+{% extends "base.html" %}
 {%load static%}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Tournaments</title>
-    <link rel="stylesheet" type="text/css" href="static/css/main.css">
-</head>
-<body>
-<header>
-    <ul>
-        <li><a href="{%url 'leage'%}">Leages</a></li>
-        <li><a href="cups.html">Cups</a></li>
-        <li><a href="teams.html">Teams</a></li>
-        <li><a href="players.html">Players</a></li>
-    </ul>
-</header>
-<main>
-    <article>
-        <h3><a href="leage1.html">Tournament1 name</a></h3>
-        <h4>Last Tournament1 Tour</h4>
-        <ul>
-            <li><a href="match.html">Match 1</a></li>
-            <li>Match 2</li>
-            <li>Match 3</li>
-            <li>Match 4</li>
-        </ul>
-    </article>
-    <article>
-        <h3>Tournament2 name</h3>
-        <h4>Last Tournament1 Tour</h4>
-        <ul>
-            <li>Match 1</li>
-            <li>Match 2</li>
-            <li>Match 3</li>
-            <li>Match 4</li>
-        </ul>
-    </article>
-    <article>
-        <h3>Tournament3 name</h3>
-        <h4>Last Tournament1 Tour</h4>
-        <ul>
-            <li>Match 1</li>
-            <li>Match 2</li>
-            <li>Match 3</li>
-            <li>Match 4</li>
-        </ul>
-    </article>    
-</main>
-<footer>
-    <p>Footer information</p>
-</footer>
-</body>
-</html>
+{% block title %}Index{% endblock %}
+{% block content %}
+        <main>
+            {% for item in tournaments%}
+            <article>
+                <h1><a href="{%url 'tournament' tournament_id=item.id%}">{{item.name}}</a></h1>
+                <h2>Last {{item.name}} Tour</h2>
+                <ul>{%for match in matches%}
+                    {%if match.tournament_id == item.id%}
+                    <li><a href="{%url 'match' match_id=match.id%}">{{match.home}}  {{match.score}} {{match.guest}}</a></li>
+                    {%endif%}
+                    {%endfor%}
+                </ul>
+            </article>
+            {% endfor %}
+        </main>
+{% endblock %}

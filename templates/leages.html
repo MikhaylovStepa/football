@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Leages</title>
-</head>
-<body>
-    <h1>Leages</h1>
+{% extends "base.html" %}
+{%load static%}
+{% block title %}Leages{% endblock %}
+{% block content %}
     <main>
+    <h1>Leages</h1>
         <a href="Leage1.html">
             <section>
                 <h3>Leage name 1</h3>
@@ -60,5 +57,4 @@
             </section>
         </a>
     </main>
-</body>
-</html>
+{% endblock %}

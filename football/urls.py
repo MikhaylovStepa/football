@@ -20,6 +20,7 @@ from django.conf.urls.static import static
 
 import football.views
 
+admin.autodiscover()
 
 application_views = [
     url(regex=r'^$',
@@ -27,7 +28,28 @@ application_views = [
         name='index'),
     url(regex=r'^leage/$',
         view=football.views.LeageView.as_view(),
-        name='leage')
+        name='leages'),
+    url(regex=r'^tournament/$',
+        view=football.views.TournamentView.as_view(),
+        name='tournament'),
+    url(regex=r'^tournament/(?P<tournament_id>[0-9]+)/$',
+        view=football.views.TournamentView.as_view(),
+        name='tournament'),
+    url(regex=r'^cups/$',
+        view=football.views.CupsView.as_view(),
+        name='cups'),
+    url(regex=r'^match/(?P<match_id>[0-9]+)/$',
+        view=football.views.MatchView.as_view(),
+        name='match'),
+    url(regex=r'^player/(?P<player_id>[0-9]+)/$',
+        view=football.views.PlayerView.as_view(),
+        name='player'),
+    url(regex=r'^team/(?P<team_id>[0-9]+)/$',
+        view=football.views.TeamView.as_view(),
+        name='team'),
+    url(regex=r'^news/$',
+        view=football.views.NewsView.as_view(),
+        name='news'),
 ]
 
 default = [
