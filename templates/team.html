@@ -1,13 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Teams</title>
-</head>
-<body>
-    <h1>Teams</h1>
-    {% for item in team %}
-        {{item.name}}
-    {% endfor %}
-</body>
-</html>
+{% extends "base.html" %}
+{%load static%}
+{% block title %}Cups{% endblock %}
+{% block content %}
+    <main>
+        <article>
+        {% for item in team %}
+        <h2>{{item.name}}</h2>
+        <ul>
+            {% for player in players %}
+            <li>{{player.name}}</li>
+            {%  endfor %}
+        </ul>
+        {% endfor %}
+        </article>
+    </main>
+{% endblock %}

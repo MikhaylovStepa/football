@@ -50,6 +50,9 @@ application_views = [
     url(regex=r'^news/$',
         view=football.views.NewsView.as_view(),
         name='news'),
+    url(regex=r'^teams/$',
+        view=football.views.TeamsView.as_view(),
+        name='teams'),
 ]
 
 default = [

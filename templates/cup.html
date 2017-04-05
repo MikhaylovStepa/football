@@ -1,13 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Cup</title>
-</head>
-<body>
-<h1>CUP</h1>
-    {% for item in tournament %}
-        {{item.name}}
-    {% endfor %}
-</body>
-</html>
+{% extends "base.html" %}
+{%load static%}
+{% block title %}Cups{% endblock %}
+{% block content %}    
+        <main>
+        {% for item in tournament %}
+        <article>
+            <a href="{%url 'tournament' tournament_id=item.id%}">
+                <h1>{{item.name}}</h1>
+            </a>
+            <h2>Last {{item.name}} Tour</h2>
+                <ul>{%for match in last_matches%}
+                    {%if match.tournament_id == item.id%}
+                    <li><a href="{%url 'match' match_id=match.match_id%}">{{match.team_home}}  {{match.score}} {{match.team_guest}}</a></li>
+                    {%endif%}
+                    {%endfor%}
+                </ul>
+        </article>
+        {% endfor %}
+    </main>
+{% endblock %}

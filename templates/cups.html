@@ -3,28 +3,19 @@
 {% block title %}Cups{% endblock %}
 {% block content %}    
         <main>
-        <h1>Cups</h1>
-                <a href="Cup.html">
-                    <section>
-                        <h3>Cup 1</h3>
-                        <p>Teams quantity, status</p>
-                        <p>Closest matches</p>
-                        <ul>
-                            <li>Match 1</li>
-                            <li>Match 2</li>
-                        </ul>
-                    </section>
-                </a>
-                <a href="Cup.html">
-                    <section>
-                        <h3>Cup 1</h3>
-                        <p>Teams quantity, status</p>
-                        <p>Closest matches</p>
-                        <ul>
-                            <li>Match 1</li>
-                            <li>Match 2</li>
-                        </ul>
-                    </section>
-                </a>
-        </main>
+        {% for item in leages %}
+        <article>
+            <a href="{%url 'tournament' tournament_id=item.id%}">
+                <h1>{{item.name}}</h1>
+            </a>
+            <h2>Last {{item.name}} Tour</h2>
+                <ul>{%for match in last_matches%}
+                    {%if match.tournament_id == item.id%}
+                    <li><a href="{%url 'match' match_id=match.match_id%}">{{match.team_home}}  {{match.score}} {{match.team_guest}}</a></li>
+                    {%endif%}
+                    {%endfor%}
+                </ul>
+        </article>
+        {% endfor %}
+    </main>
 {% endblock %}

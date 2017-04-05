@@ -1,15 +1,52 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Leage 1</title>
-</head>
-<body>
-<h1>LEAGE</h1>
-    <h1>
+{% extends "base.html" %}
+{%load static%}
+{% block title %}Leages{% endblock %}
+{% block content %}
+    <main>
         {% for item in tournament %}
-            {{item.name}}
+        <article>
+            <a href="{%url 'tournament' tournament_id=item.id%}">
+                <h1>{{item.name}}</h1>
+            </a>
+                <table>
+                    <tr>
+                        <td>Rank</td>
+                        <td>Name</td>
+                        <td>Matches</td>
+                        <td>Win</td>
+                        <td>Draw</td>
+                        <td>Lost</td>
+                        <td>Goals</td>
+                        <td>Points</td>
+                    </tr>
+                    {% for team in teams_points %}
+                    <tr>
+                        {% if item.id == team.tournament_id %}
+                        <td>1</td>
+                        <td><a href="{%url 'team' team_id=team.team_id%}">{{team.team_name}}</a></td>
+                        {% for quantity in teams_points %}
+
+                        {% if quantity.team_id == team.team_id and quantity.tournament_id == item.id %}
+                        <td>{{quantity.matches}} </td>
+                        <td>{{quantity.win}}</td>
+                        <td>{{quantity.draw}}</td>
+                        <td>{{quantity.lost}}</td>
+                        <td>{{quantity.goals}}</td>
+                        <td>{{quantity.points}}</td>
+                        {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </table>
+            <h2>Last {{item.name}} Tour</h2>
+                <ul>{%for match in last_matches%}
+                    {%if match.tournament_id == item.id%}
+                    <li><a href="{%url 'match' match_id=match.match_id%}">{{match.team_home}}  {{match.score}} {{match.team_guest}}</a></li>
+                    {%endif%}
+                    {%endfor%}
+                </ul>
+        </article>
         {% endfor %}
-    </h1>
-</body>
-</html>
+    </main>
+{% endblock %}
