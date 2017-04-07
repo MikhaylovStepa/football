@@ -40,12 +40,19 @@
                     {% endfor %}
                 </table>
             <h2>Last {{item.name}} Tour</h2>
-                <ul>{%for match in last_matches%}
-                    {%if match.tournament_id == item.id%}
-                    <li><a href="{%url 'match' match_id=match.match_id%}">{{match.team_home}}  {{match.score}} {{match.team_guest}}</a></li>
+                {% for tour in tour_number %}
+                    {% if tour.tournament_id == item.id %}
+                    {% for num in tour.last_tour%}
+                    <h3>{{num}}</h3>
+                <ul>{%for match in matches%}
+                    {%if match.tournament_id == item.id and match.tour == num %}
+                    <li><a href="{%url 'match' match_id=match.id%}">{{match.home}}  {{match.score}} {{match.guest}}</a></li>
                     {%endif%}
                     {%endfor%}
                 </ul>
+                    {% endfor %}
+                    {% endif %}
+                {% endfor %}
         </article>
         {% endfor %}
     </main>

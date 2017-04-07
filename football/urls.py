@@ -53,6 +53,12 @@ application_views = [
     url(regex=r'^teams/$',
         view=football.views.TeamsView.as_view(),
         name='teams'),
+    url(regex=r'^tournament_list/$',
+        view=football.views.TournamentListView.as_view(),
+        name='tournament_list'),
+    url(regex=r'^tournament_schedule/$',
+        view=football.views.TournamentListView.as_view(),
+        name='tournament_schedule'),
 ]
 
 default = [

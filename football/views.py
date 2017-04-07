@@ -5,7 +5,7 @@ from football.models import *
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views import View
-from forms import TeamForm
+from forms import TeamForm, TournamentForm
 
 class IndexView(django.views.generic.TemplateView):
     """Render 'index.html' template."""
@@ -36,7 +36,8 @@ class TournamentView(django.views.generic.TemplateView):
     def get(self, request, tournament_id):
         context = {'tournament': Tournament.objects.filter(id=tournament_id),
                    'teams_points': Team.objects.get_team_matches_and_points_in_the_leage(),
-                   'last_matches': Match.objects.get_last_matches_in_tournament()
+                   'matches': Match.objects.all(),
+                   'tour_number': Match.objects.get_tour_number_in_tournament()
                    }
         if context['tournament'][0].tournament_type == 'leage':
             return render(request,self.template_name_leage,context)
@@ -108,3 +109,22 @@ class NewsView(django.views.generic.TemplateView):
         return render(request,self.template_name,context)
 
 
+class TournamentListView(django.views.generic.TemplateView):
+    """Render 'about.html' template."""
+
+    template_name = 'tournament_list.html'
+    form_class = TournamentForm
+    def get(self, request, *args, **kwargs):
+        context = {'tournaments' : Tournament.objects.all()}
+        return render(request,self.template_name,context)
+
+    def post(self,request, *args, **kwargs):
+
+        form=self.request.POST
+        #import pdb
+        #pdb.set_trace()
+        #return form
+        #'schedule': Match.objects.generate_schedule(form['tournament_id']),
+        context = {'schedule': Match.objects.generate_schedule(form['tournament_id']),
+                   'matches':Match.objects.filter(tournament_id = form['tournament_id'])}
+        return render(request, 'tournament_schedule.html', context)
