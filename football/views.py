@@ -5,7 +5,8 @@ from football.models import *
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views import View
-from forms import TeamForm, TournamentForm
+from forms import TeamForm, TournamentForm, CreateTournamentForm
+import django.urls as urls
 
 class IndexView(django.views.generic.TemplateView):
     """Render 'index.html' template."""
@@ -128,3 +129,129 @@ class TournamentListView(django.views.generic.TemplateView):
         context = {'schedule': Match.objects.generate_schedule(form['tournament_id']),
                    'matches':Match.objects.filter(tournament_id = form['tournament_id'])}
         return render(request, 'tournament_schedule.html', context)
+
+class AdminView(django.views.generic.TemplateView):
+
+    template_name = 'admin.html'
+    context = {'tournaments':Tournament.objects.all()}
+
+    def get(self, request, *args, **kwargs):
+        template_name = 'admin.html'
+        context = {'tournaments': Tournament.objects.filter(status='new'),
+                   'teams': Team.objects.all()}
+        return render(request, template_name, context)
+
+class CreateTournamentView(django.views.generic.TemplateView):
+
+    def get(self, request, *args, **kwargs):
+        template_name = 'create_tournament.html'
+        context=''
+        return render(request, template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        form = self.request.POST
+        Tournament(name=form['name'], loops_quantity=form['loops'], tournament_type=form['tournament_type'], status=form['status']).save()
+        return HttpResponseRedirect(urls.reverse_lazy('edit_tournament', args=[Tournament.objects.get_last_id()]))
+
+
+class EditTournamentView(django.views.generic.TemplateView):
+
+    template_name = 'edit_tournament.html'
+
+    def get(self, request, tournament_id):
+        context = {'tournament': Tournament.objects.filter(id=tournament_id),
+                   'teams': Team.objects.all()}
+        return render(request, self.template_name, context)
+
+    def post(self, request, tournament_id, *args, **kwargs):
+        form = CreateTournamentForm(self.request.POST)
+        if form.is_valid():
+            Tournament.objects.filter(id=tournament_id).update(status=form['status'], loops_quantity=form['loops_quantity'], name=form['name'], tournament_type=form['tournament_type'])
+            return HttpResponseRedirect(urls.reverse_lazy('edit_tournament', args=[
+                tournament_id]))
+        else:
+            return HttpResponseRedirect(urls.reverse_lazy('index'))
+
+class DeleteTournamentView(django.views.generic.TemplateView):
+    template_name = 'delete_tournament.html'
+    def get(self, request, tournament_id):
+        name=''
+        for item in Tournament.objects.filter(id=tournament_id):
+            name = item.name
+        context = {'name': name}
+        Tournament.objects.filter(id=tournament_id).delete()
+        return render(request, self.template_name, context)
+
+
+class AddTeamView(django.views.generic.TemplateView):
+    template_name = 'add_team.html'
+    def get(self, request, tournament_id):
+        name=''
+        for item in Tournament.objects.filter(id=tournament_id):
+            name = item.name
+        context = {'name': name,
+                   'teams': Team.objects.all(),
+                   'tour_teams':TourTeam.objects.filter(tournament_id=tournament_id).select_related('team'),
+                   'tournament_id':tournament_id}
+        return render(request, self.template_name, context)
+    def post(self, request, tournament_id):
+        form=self.request.POST
+        TourTeam(tournament_id=tournament_id, team_id=form['team_id']).save()
+        return HttpResponseRedirect(urls.reverse_lazy('add_team', args=[
+            tournament_id]))
+
+class GenerateScheduleView(django.views.generic.TemplateView):
+    template_name = 'generate_schedule.html'
+
+    def get(self, request, tournament_id):
+
+        for item in Tournament.objects.filter(id=tournament_id):
+            name = item.name
+        Match.objects.filter(tournament_id=tournament_id).delete()
+        context = {'schedule': Match.objects.generate_schedule(tournament_id),
+                   'matches': Match.objects.filter(tournament_id=tournament_id),
+                   'name' : name}
+        return render(request, self.template_name, context)
+
+class DeleteTeamView(django.views.generic.TemplateView):
+    template_name = 'delete_team_from_tournament.html'
+    def get(self, request, tourteam_id):
+        tour=''
+        team=''
+        for item in TourTeam.objects.filter(id=tourteam_id).select_related('team').select_related('tournament'):
+            tour = item.tournament.name
+            team = item.team.name
+        context = {'tour': tour,
+                   'team':team}
+        TourTeam.objects.filter(id=tourteam_id).delete()
+        return render(request, self.template_name, context)
+
+class CreateTeamView(django.views.generic.TemplateView):
+    template_name = 'create_new_team_and_add.html'
+
+    def post(self, request, tournament_id):
+        form = self.request.POST
+        Team(name=form['name'], coach=form['coach']).save()
+        TourTeam(tournament_id=tournament_id, team_id=Team.objects.get_last_id()).save()
+        return HttpResponseRedirect(urls.reverse_lazy('add_team', args=[
+            tournament_id]))
+
+class ResultsView(django.views.generic.TemplateView):
+    template_name = 'results.html'
+
+    def get(self, request, tournament_id):
+        context = {'matches': Match.objects.filter(tournament_id=tournament_id)}
+        return render(request, self.template_name, context)
+
+class MatchResultsView(django.views.generic.TemplateView):
+    template_name = 'match_result.html'
+
+    def get(self, request, match_id):
+        context = {'matches': Match.objects.filter(id=match_id)}
+        return render(request, self.template_name, context)
+
+    def post(self, request, match_id):
+        form=self.request.POST
+        Match.objects.filter(id=match_id).update(status='ended', home_id=form['home_id'], guest_id=form['guest_id'], score=form['score'], tournament_id=form['tournament_id'])
+        Tournament.objects.filter(id=form['tournament_id']).update(status='started')
+        return HttpResponseRedirect(urls.reverse_lazy('match_results', args=[match_id]))

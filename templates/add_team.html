@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Create Tournament{% endblock %}
+{% block content %}
+    <main>
+        <article>
+
+            <h1>Tournament {{name}} add team</h1>
+            <ul>
+            {% for t_team in tour_teams %}
+                <li>{{t_team.team.name}}<a href="{%url 'delete_team_from_tournament' tourteam_id=t_team.id%}">Delete</a></li>
+            {% endfor %}
+             </ul>
+            <form action="" method="post">
+                {% csrf_token %}
+            <select name="team_id" id="">
+            {% for team in teams %}
+                <option value="{{team.id}}">{{team.name}}</option>
+            {% endfor %}
+             </select>
+            <input type="submit" value="Add">
+            </form>
+            <a href="{%url 'create_new_team_and_add' tournament_id=tournament_id%}">Create new team and add</a>
+        </article>
+    </main>
+<script>
+
+</script>
+{% endblock %}

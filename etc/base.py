@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 
 ADDITIONAL_APPS = [
     'football',
+
 ]
 
 DJANGO_APPS = [

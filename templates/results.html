@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{%load static%}
+{% block title %}Index{% endblock %}
+{% block content %}
+        <main>
+
+            <article>
+                <h1>List of matches</h1>
+                {% for item in matches %}
+                    <ul>
+                        <a href="{%url 'match_results' match_id=item.id%}"><li>{{item.home}} {{item.score}} {{item.guest}}</li></a>
+                    </ul>
+                {% endfor %}
+            </article>
+
+        </main>
+{% endblock %}

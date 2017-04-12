@@ -18,7 +18,7 @@
                     {% for team in teams_points %}
                     <tr>
                         {% if item.id == team.tournament_id %}
-                        <td>1</td>
+                        <td>{{team.rank}}</td>
                         <td><a href="{%url 'team' team_id=team.team_id%}">{{team.team_name}}</a></td>
                         {% for quantity in teams_points %}
 

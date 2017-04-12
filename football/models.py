@@ -1,5 +1,13 @@
 from django.db import models
 
+class TournamentManager(models.Manager):
+    def get_last_id(self):
+        last_id=0
+        for item in Tournament.objects.all():
+            if item.id > last_id:
+                last_id=item.id
+        return last_id
+
 class Tournament(models.Model):
 
     name = models.CharField(
@@ -34,8 +42,17 @@ class Tournament(models.Model):
             name=self.name,
             tournament_type=self.tournament_type)
 
+    objects = TournamentManager()
+
 
 class TeamManager(models.Manager):
+
+    def get_last_id(self):
+        last_id=0
+        for item in Team.objects.all():
+            if item.id > last_id:
+                last_id=item.id
+        return last_id
 
     def get_team_matches_and_points_in_the_leage(self):
         team_stats_in_tournament = []
@@ -53,7 +70,7 @@ class TeamManager(models.Manager):
         for match in Match.objects.all():
             for item in team_stats_in_tournament:
                 if match.home_id == item['team_id'] and match.tournament_id == item[
-                    'tournament_id']:
+                    'tournament_id'] and match.status=='ended':
                     item['matches'] = item['matches']+1
                     if match.score[:match.score.find(':')]!='-':
                         devide_score = match.score.find(':')
@@ -72,7 +89,7 @@ class TeamManager(models.Manager):
                         else:
                             item['lost'] = item['lost'] + 1
                 if match.guest_id == item['team_id'] and match.tournament_id == item[
-                    'tournament_id']:
+                    'tournament_id'] and match.status=='ended':
                     item['matches'] = item['matches'] + 1
                     if match.score[:match.score.find(':')]!='-':
                         devide_score = match.score.find(':')
@@ -99,6 +116,14 @@ class TeamManager(models.Manager):
                 return 0
         team_stats_in_tournament.sort(key=lambda x: x['tournament_id'])
         team_stats_in_tournament.sort(cmp=sort_items_by_tid, reverse=True)
+        i=1
+        tournament_id=0
+        for item in team_stats_in_tournament:
+            if tournament_id!=item['tournament_id']:
+                i=1
+                tournament_id=item['tournament_id']
+            item['rank'] = i
+            i=i+1
         return team_stats_in_tournament
 
 
@@ -262,143 +287,157 @@ class MatchManager(models.Manager):
         for item in TourTeam.objects.all():
             if item.tournament_id == tour_id:
                 teams.append(item.team_id)
+        loops_quantity = 1
+        for item in Tournament.objects.filter(id=tournament_id):
+            loops_quantity = item.loops_quantity
         number_of_teams = len(teams)
         if number_of_teams % 2 == 1:
             teams.append(0)
-        arr = []
-        def create_arr(number, i=0):
-            if i < number-1:
+        # arr = []
+        # def create_arr(number, i=0):
+        #     if i < number-1:
+        #
+        #         index = i + 1
+        #         while index<=number-1:
+        #             #arr[i].append([teams[i],teams[index]])
+        #             arr.append([i, index])
+        #             index = index +1
+        #         create_arr(number, i + 1)
 
-                index = i + 1
-                while index<=number-1:
-                    #arr[i].append([teams[i],teams[index]])
-                    arr.append([i, index])
-                    index = index +1
-                create_arr(number, i + 1)
-        create_arr(6)
 
-
-        def match_pairs_tour(arr, number):
-            match_pairs_arr=[[] for x in range(number-1)]
+        def scroll_arr(arr):
+            result = []
             i = 0
+            temp = []
             while i < len(arr):
-                j=0
-                while j < len(match_pairs_arr):
-                    if arr[i][0] not in match_pairs_arr[j] \
-                        and arr[i][1] not in match_pairs_arr[j]:
-                        match_pairs_arr[j].append(arr[i][0])
-                        match_pairs_arr[j].append(arr[i][1])
-                        break
+                temp.append([arr[i], arr[i + 1]])
+                i = i + 2
+            snake_arr = []
+            i = 0
+            while i < len(temp):
+                snake_arr.append(temp[i][1])
+                i = i + 1
+            i = len(temp) - 1
+            while i > 0:
+                snake_arr.append(temp[i][0])
+                i = i - 1
+            new_snake_arr = []
+            new_snake_arr.append(snake_arr[len(snake_arr) - 1])
+            i = 0
+            while i < len(snake_arr) - 1:
+                new_snake_arr.append(snake_arr[i])
+                i = i + 1
+            result.append(arr[0])
+            result.append(new_snake_arr[0])
+            i = 0
+            new_arr = []
+            while i < len(new_snake_arr) / 2:
+                new_arr.append(new_snake_arr[len(new_snake_arr) - 1 - i])
+                new_arr.append(new_snake_arr[i + 1])
+                i = i + 1
+            i = 0
+            while i < len(new_arr):
+                result.append(new_arr[i])
+                i = i + 1
+            return result
+
+
+
+        def match_pairs_tour(teams):
+            match_pairs_arr = []
+            arr = teams
+            i=0
+            while i<len(teams)-1:
+                arr=scroll_arr(arr)
+                j = 0
+                match_pairs_arr.append([])
+                while j<len(arr):
+                    match_pairs_arr[i].append(arr[j])
                     j = j+1
-                i=i+1
+                i = i+1
             return match_pairs_arr
-        num=6
-        new_arr=match_pairs_tour(arr,num)
-        import pdb
-        pdb.set_trace()
-        return new_arr
-
-        def match_pairs_tour_even(arr):
-            match_pairs_arr=[]
-            is_any_pair = True
-            while is_any_pair == True:
-                is_any_pair=False
-                i = len(arr)-1
-                while i>=0:
-                    one_tuor = []
-                    j = 0
-                    while j<len(arr[i]):
-                        if arr[i][j][0] != -1 \
-                            and arr[i][j][0] not in one_tuor \
-                            and arr[i][j][1] not in one_tuor:
-                            one_tuor = []
-                            one_tuor.append(arr[i][j][0])
-                            one_tuor.append(arr[i][j][1])
-                            arr[i][j][0] = -1
-                            arr[i][j][1] = -1
-                            k = 0
-                            while k<len(arr):
-                                l=0
-                                while l<len(arr[k]):
-                                    if arr[k][l][0]!=-1 \
-                                        and arr[k][l][0] not in one_tuor \
-                                        and arr[k][l][1] not in one_tuor:
-                                        one_tuor.append(arr[k][l][0])
-                                        one_tuor.append(arr[k][l][1])
-                                        arr[k][l][0] = -1
-                                        arr[k][l][1] = -1
-                                    l=l+1
-                                k=k+1
-                        j = j+1
-                    i = i - 1
-                    match_pairs_arr.append(one_tuor)
-            return match_pairs_arr
-
-        def match_pairs_tour_odd(arr):
-            match_pairs_arr=[]
-            is_any_pair = True
-            one_tuor = []
-            while is_any_pair == True:
-                is_any_pair=False
-                i = len(arr)-1
-                while i>=0:
-                    one_tuor = []
-                    j = 0
-                    while j<len(arr[i]):
-                        if arr[i][j][0] != -1 \
-                            and arr[i][j][0] not in one_tuor \
-                            and arr[i][j][1] not in one_tuor:
-                            one_tuor = []
-                            if arr[i][j][1]!=0:
-                                one_tuor.append(arr[i][j][0])
-                                one_tuor.append(arr[i][j][1])
-                                arr[i][j][0] = -1
-                                arr[i][j][1] = -1
-                            else:
-                                arr[i][j][0] = -1
-                                arr[i][j][1] = -1
-                            k = 0
-                            while k<len(arr):
-                                l=0
-                                while l<len(arr[k]):
-                                    if arr[k][l][0]!=-1 \
-                                        and arr[k][l][0] not in one_tuor \
-                                        and arr[k][l][1] not in one_tuor:
-                                        if arr[k][l][1] != 0:
-                                            one_tuor.append(arr[k][l][0])
-                                            one_tuor.append(arr[k][l][1])
-                                            arr[k][l][0] = -1
-                                            arr[k][l][1] = -1
-                                        else:
-                                            arr[k][l][0] = -1
-                                            arr[k][l][1] = -1
-                                    l=l+1
-                                k=k+1
-                        j = j+1
-                    i = i - 1
-                    match_pairs_arr.append(one_tuor)
-            return match_pairs_arr
-        if number_of_teams%2==0:
-            pairs = match_pairs_tour_even(arr)
-        else:
-            pairs = match_pairs_tour_odd(arr)
-
-
-
-
+        # def match_pairs_tour(arr, number):
+        #     match_pairs_arr=[[] for x in range(number-1)]
+        #     i = 0
+        #     while i < len(arr):
+        #         j=0
+        #         while j < len(match_pairs_arr):
+        #             if arr[i][0] not in match_pairs_arr[j] \
+        #                 and arr[i][1] not in match_pairs_arr[j]:
+        #                 match_pairs_arr[j].append(arr[i][0])
+        #                 match_pairs_arr[j].append(arr[i][1])
+        #                 break
+        #             j = j+1
+        #         i=i+1
+        #     return match_pairs_arr
+        # num=6
+        # new_arr=match_pairs_tour(arr,num)
+        # import pdb
+        # pdb.set_trace()
+        # return new_arr
+        pairs = match_pairs_tour(teams)
         i = 0
-        #new_arr=[]
-        while i<len(pairs):
-            tour = i+1
-            tour_id = tournament_id
-            score = '-:-'
-            status = 'new'
-            j=0
-            while j<len(pairs[i]):
-                #new_arr.append([tour_id, tour, score, status, pairs[i][j], pairs[i][j+1]])
-                #Match(tournament_id=tour_id, tour=tour, score=score,status=status, home_id=pairs[i][j], guest_id=pairs[i][j+1]).save()
-                j=j+2
-            i = i+1
+        loop = 1
+        tour = 0
+
+        while loop<=loops_quantity:
+            i=0
+            if loop%2 == 1:
+                while i<len(pairs):
+                    tour = tour + 1
+                    tour_id = tournament_id
+                    score = '-:-'
+                    status = 'new'
+                    j=0
+                    if number_of_teams%2 == 0:
+                        while j<len(pairs[i]):
+                            Match(tournament_id=tour_id, tour=tour, score=score,status=status, home_id=pairs[i][j], guest_id=pairs[i][j+1]).save()
+                            j=j+2
+
+                    else:
+                        while j<len(pairs[i]):
+                            if j%2==0 and pairs[i][j]!=0 and pairs[i][j+1]!=0:
+                                Match(tournament_id=tour_id, tour=tour, score=score,
+                                      status=status, home_id=pairs[i][j],
+                                      guest_id=pairs[i][j + 1]).save()
+                            if j%2==1 and pairs[i][j]!=0 and pairs[i][j-1]!=0:
+                                Match(tournament_id=tour_id, tour=tour, score=score,
+                                      status=status, home_id=pairs[i][j],
+                                      guest_id=pairs[i][j + 1]).save()
+                            j=j+2
+                    i = i + 1
+            else:
+                while i < len(pairs):
+                    tour = tour + 1
+                    tour_id = tournament_id
+                    score = '-:-'
+                    status = 'new'
+                    j = 0
+                    if number_of_teams % 2 == 0:
+                        while j < len(pairs[i]):
+                            Match(tournament_id=tour_id, tour=tour,
+                                  score=score, status=status,
+                                  home_id=pairs[i][j + 1],
+                                  guest_id=pairs[i][j]).save()
+                            j = j + 2
+
+                    else:
+                        while j < len(pairs[i]):
+                            if j % 2 == 0 and pairs[i][j] != 0 and pairs[i][
+                                        j + 1] != 0:
+                                Match(tournament_id=tour_id, tour=tour,
+                                      score=score,
+                                      status=status, home_id=pairs[i][j + 1],
+                                      guest_id=pairs[i][j]).save()
+                            if j % 2 == 1 and pairs[i][j] != 0 and pairs[i][
+                                        j - 1] != 0:
+                                Match(tournament_id=tour_id, tour=tour,
+                                      score=score,
+                                      status=status, home_id=pairs[i][j + 1],
+                                      guest_id=pairs[i][j]).save()
+                            j = j + 2
+                    i = i + 1
+            loop = loop+1
         return 'ok'
 
 

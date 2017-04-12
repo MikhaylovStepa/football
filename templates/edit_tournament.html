@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{%load static%}
+{% block title %}Create Tournament{% endblock %}
+{% block content %}
+    <main>
+        <article>
+        <h1>Edit Tournament</h1>
+            {% for item in tournament %}
+            <form action="" method="post">
+                {% csrf_token %}
+                <input name="status" type="hidden" value="{{tournament.status}}">
+                <input name="name" type="text" placeholder="Input tournament name" value="{{item.name}}">
+                <input name="loops_quantity" type="text" placeholder="Input loops value" value="{{item.loops_quantity}}">
+                <select name="tournament_type">
+                    {% if item.tournament_type == "cup" %}
+                    <option value="cup" selected>Cup</option>
+                    <option value="leage">Leage</option>
+                    {% endif %}
+                    {% if item.tournament_type == "leage" %}
+                    <option value="cup">Cup</option>
+                    <option value="leage" selected>Leage</option>
+                    {% endif %}
+                </select>
+                <input type="submit" value="edit">
+            </form>
+
+            <a href="{%url 'add_team' tournament_id=item.id%}">Add team into tournament</a>
+            <a href="{%url 'generate_schedule' tournament_id=item.id%}">Generate schedule</a>
+            <a href="{%url 'results' tournament_id=item.id%}">Change result in matches</a>
+            {% endfor %}
+        </article>
+    </main>
+{% endblock %}

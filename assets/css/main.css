@@ -14,6 +14,10 @@ body {
   background-color: green;
 }
 
+header ul li:last-child{
+    background-color: white;
+}
+
 .logo {
   height: 50px;
 }

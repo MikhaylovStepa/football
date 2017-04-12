@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Create Tournament{% endblock %}
+{% block content %}
+    <main>
+        <article>
+
+            <h1>Tournament {{name}} add team</h1>
+            <form action="" method="post">
+                {% csrf_token %}
+                <input type="text" name="name" value="" placeholder="Enter team name">
+                <input type="text" name="coach" value="" placeholder="Enter coach name">
+                <input type="submit" value="Add">
+            </form>
+        </article>
+    </main>
+{% endblock %}

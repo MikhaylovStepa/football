@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{%load static%}
+{% block title %}Index{% endblock %}
+{% block content %}
+        <main>
+            {% for item in matches%}
+            <article>
+                <p>{{item.home}} {{item.score}} {{item.guest}}</p>
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="tournament_id" value="{{item.tournament_id}}">
+                    <input type="hidden" name="home_id" value="{{item.home_id}}">
+                    <input type="hidden" name="guest_id" value="{{item.guest_id}}">
+                    <input type="hidden" name="tour" value="{{item_tour}}">
+                    <input type="text" name="score" placeholder="Change score">
+                    <input type="submit" value="Change">
+                </form>
+            </article>
+            {% endfor %}
+        </main>
+{% endblock %}
