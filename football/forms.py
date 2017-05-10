@@ -8,7 +8,7 @@ class TournamentForm(forms.Form):
     tournament_id = forms.HiddenInput
 
 class CreateTournamentForm(forms.Form):
-    status = forms.HiddenInput
+    status = forms.Field()
     name = forms.CharField(
         max_length=30
     )

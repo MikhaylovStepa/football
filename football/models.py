@@ -1,6 +1,12 @@
 from django.db import models
+import math
+
 
 class TournamentManager(models.Manager):
+
+    '''Manager for model Tournament'''
+
+
     def get_last_id(self):
         last_id=0
         for item in Tournament.objects.all():
@@ -47,6 +53,9 @@ class Tournament(models.Model):
 
 class TeamManager(models.Manager):
 
+    '''Manager for model Team'''
+
+
     def get_last_id(self):
         last_id=0
         for item in Team.objects.all():
@@ -54,8 +63,10 @@ class TeamManager(models.Manager):
                 last_id=item.id
         return last_id
 
+    # calculate points in leage for every team
     def get_team_matches_and_points_in_the_leage(self):
         team_stats_in_tournament = []
+        #create list of dicts with teams statistic in leage with defult values
         for item in TourTeam.objects.all().select_related('team'):
             team_matches_in_tournament_row = {'team_id': item.team_id,
                                               'team_name': item.team.name,
@@ -67,6 +78,7 @@ class TeamManager(models.Manager):
                                               'goals':'0:0',
                                               'points': 0}
             team_stats_in_tournament.append(team_matches_in_tournament_row)
+        #edit statistic using table with matches results
         for match in Match.objects.all():
             for item in team_stats_in_tournament:
                 if match.home_id == item['team_id'] and match.tournament_id == item[
@@ -109,15 +121,21 @@ class TeamManager(models.Manager):
                         else:
                             item['lost'] = item['lost'] + 1
 
+
+        #sort list of dicts by tournament_id
+        team_stats_in_tournament.sort(key=lambda x: x['tournament_id'])
+
+        #second sort by points after sorting by tournament_id
         def sort_items_by_tid(arr1, arr2):
             if arr1['tournament_id'] == arr2['tournament_id']:
                 return arr1['points']-arr2['points']
             else:
                 return 0
-        team_stats_in_tournament.sort(key=lambda x: x['tournament_id'])
         team_stats_in_tournament.sort(cmp=sort_items_by_tid, reverse=True)
         i=1
         tournament_id=0
+
+        #add rank for teams in tournaments
         for item in team_stats_in_tournament:
             if tournament_id!=item['tournament_id']:
                 i=1
@@ -128,7 +146,6 @@ class TeamManager(models.Manager):
 
 
 class Team(models.Model):
-
 
     name = models.CharField(
         max_length=30,
@@ -234,6 +251,10 @@ class Goal(models.Model):
     )
 
 class MatchManager(models.Manager):
+
+    '''Manager for model Match'''
+
+    #create list of dicts with tournament and list of tours
     def get_tour_number_in_tournament(self):
         highest_tournament_tour = []
         for tournament in Tournament.objects.all():
@@ -249,6 +270,7 @@ class MatchManager(models.Manager):
             highest_tournament_tour.append(highest_tournament_tour_row)
         return highest_tournament_tour
 
+    #returns all last matches in all tournaments
     def get_last_matches_in_tournament(self):
         last_matches_in_tournament=[]
         highest_tournament_tour = []
@@ -278,12 +300,23 @@ class MatchManager(models.Manager):
                     }
                     last_matches_in_tournament.append(
                         last_matches_in_tournament_row)
-
         return last_matches_in_tournament
 
+    #generate matches schedule for leage tournaments
+    #algorithm for genaration schedule is not simple.
+    # for example you have six teams in tournament(1,2,3,4,5,6).
+    # and for example in first tour you have next pairs:
+    #1 vs 2, 3 vs 4, 5 vs 6
+    #next tour should have another pairs. lets create second tour.
+    #1  vs 3 - this pair didn't play yet
+    #2 vs 4 - and this pair didn't play yet
+    #5 vs 6 - but this pair have already played
+    #we have to remake this tour
+    #There is a special algorithm for genaration schedule which i transformed in python code
     def generate_schedule(self, tournament_id):
         teams = []
         tour_id = int(tournament_id)
+        #get list of teams in tournament
         for item in TourTeam.objects.all():
             if item.tournament_id == tour_id:
                 teams.append(item.team_id)
@@ -293,18 +326,10 @@ class MatchManager(models.Manager):
         number_of_teams = len(teams)
         if number_of_teams % 2 == 1:
             teams.append(0)
-        # arr = []
-        # def create_arr(number, i=0):
-        #     if i < number-1:
-        #
-        #         index = i + 1
-        #         while index<=number-1:
-        #             #arr[i].append([teams[i],teams[index]])
-        #             arr.append([i, index])
-        #             index = index +1
-        #         create_arr(number, i + 1)
 
-
+        #get list with teams_id in format [1,2,3,4,5,6] and
+        #returns list of teams in another combination [1,3,5,2,6,4]
+        #in future every two teams create a match in schedule
         def scroll_arr(arr):
             result = []
             i = 0
@@ -342,7 +367,7 @@ class MatchManager(models.Manager):
             return result
 
 
-
+        #create list of list of teams. every list is make a tour
         def match_pairs_tour(teams):
             match_pairs_arr = []
             arr = teams
@@ -356,30 +381,11 @@ class MatchManager(models.Manager):
                     j = j+1
                 i = i+1
             return match_pairs_arr
-        # def match_pairs_tour(arr, number):
-        #     match_pairs_arr=[[] for x in range(number-1)]
-        #     i = 0
-        #     while i < len(arr):
-        #         j=0
-        #         while j < len(match_pairs_arr):
-        #             if arr[i][0] not in match_pairs_arr[j] \
-        #                 and arr[i][1] not in match_pairs_arr[j]:
-        #                 match_pairs_arr[j].append(arr[i][0])
-        #                 match_pairs_arr[j].append(arr[i][1])
-        #                 break
-        #             j = j+1
-        #         i=i+1
-        #     return match_pairs_arr
-        # num=6
-        # new_arr=match_pairs_tour(arr,num)
-        # import pdb
-        # pdb.set_trace()
-        # return new_arr
         pairs = match_pairs_tour(teams)
         i = 0
         loop = 1
         tour = 0
-
+        #create matches in tournament with some default values
         while loop<=loops_quantity:
             i=0
             if loop%2 == 1:
@@ -393,7 +399,6 @@ class MatchManager(models.Manager):
                         while j<len(pairs[i]):
                             Match(tournament_id=tour_id, tour=tour, score=score,status=status, home_id=pairs[i][j], guest_id=pairs[i][j+1]).save()
                             j=j+2
-
                     else:
                         while j<len(pairs[i]):
                             if j%2==0 and pairs[i][j]!=0 and pairs[i][j+1]!=0:
@@ -420,7 +425,6 @@ class MatchManager(models.Manager):
                                   home_id=pairs[i][j + 1],
                                   guest_id=pairs[i][j]).save()
                             j = j + 2
-
                     else:
                         while j < len(pairs[i]):
                             if j % 2 == 0 and pairs[i][j] != 0 and pairs[i][
@@ -439,6 +443,16 @@ class MatchManager(models.Manager):
                     i = i + 1
             loop = loop+1
         return 'ok'
+
+    #not ready
+    def generate_schedule_for_cup(self, tournament_id):
+        teams = []
+        tour_id = int(tournament_id)
+        for item in TourTeam.objects.all():
+            if item.tournament_id == tour_id:
+                teams.append(item.team_id)
+        teams_count = len(teams)
+        tours = math.ceil(math.log(teams_count, 2))
 
 
 

@@ -8,9 +8,9 @@
             {% for item in tournament %}
             <form action="" method="post">
                 {% csrf_token %}
-                <input name="status" type="hidden" value="{{tournament.status}}">
+                <input name="status" type="hidden" value="{{item.status}}">
                 <input name="name" type="text" placeholder="Input tournament name" value="{{item.name}}">
-                <input name="loops_quantity" type="text" placeholder="Input loops value" value="{{item.loops_quantity}}">
+                <input name="loops" type="number" placeholder="Input loops value" value="{{item.loops_quantity}}">
                 <select name="tournament_type">
                     {% if item.tournament_type == "cup" %}
                     <option value="cup" selected>Cup</option>

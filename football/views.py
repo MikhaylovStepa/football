@@ -11,6 +11,7 @@ import django.urls as urls
 class IndexView(django.views.generic.TemplateView):
     """Render 'index.html' template."""
 
+    #show information about last played tour in all tournaments
     template_name = 'index.html'
     def get(self, request, *args, **kwargs):
         context = {'tournaments' : Tournament.objects.all(),
@@ -19,8 +20,9 @@ class IndexView(django.views.generic.TemplateView):
 
 
 class LeageView(django.views.generic.TemplateView):
-    """Render 'about.html' template."""
+    """Render 'leages.html' template."""
 
+    #show info about leages: not full touranment table and last played tour
     template_name = 'leages.html'
     context = {'leages': Tournament.objects.filter(tournament_type='leage'),
                'teams_points':Team.objects.get_team_matches_and_points_in_the_leage(),
@@ -30,8 +32,9 @@ class LeageView(django.views.generic.TemplateView):
 
 
 class TournamentView(django.views.generic.TemplateView):
-    """Render 'about.html' template."""
+    """Render 'leage.html' and 'cup.html' template."""
 
+    #show info about leage or cup: full table and list of matches and tours
     template_name_leage = 'leage.html'
     template_name_cup = 'cup.html'
     def get(self, request, tournament_id):
@@ -47,8 +50,9 @@ class TournamentView(django.views.generic.TemplateView):
 
 
 class CupsView(django.views.generic.TemplateView):
-    """Render 'about.html' template."""
+    """Render 'cups.html' template."""
 
+    # show info about cups: not full touranment table and last played tour
     template_name = 'cups.html'
     context = {'leages': Tournament.objects.filter(tournament_type='cup'),
                'last_matches': Match.objects.get_last_matches_in_tournament()}
@@ -56,20 +60,19 @@ class CupsView(django.views.generic.TemplateView):
         return render(request, self.template_name, self.context)
 
 
-
-
 class MatchView(django.views.generic.TemplateView):
-    """Render 'about.html' template."""
+    """Render 'match.html' template."""
 
+    # show info about match
     template_name = 'match.html'
-
     def get(self, request, match_id):
         context = {'match': Match.objects.filter(id=match_id)}
         return render(request, self.template_name, context)
 
 class PlayerView(django.views.generic.TemplateView):
-    """Render 'index.html' template."""
+    """Render 'player.html' template."""
 
+    # show info about player
     template_name = 'player.html'
     def get(self, request, player_id):
         context = {'player' : Player.objects.filter(id=player_id)}
@@ -77,8 +80,9 @@ class PlayerView(django.views.generic.TemplateView):
 
 
 class TeamView(django.views.generic.TemplateView):
-    """Render 'index.html' template."""
+    """Render 'team.html' template."""
 
+    # show info about team
     template_name = 'team.html'
     def get(self, request, team_id):
         context = {'team' : Team.objects.filter(id=team_id),
@@ -86,11 +90,12 @@ class TeamView(django.views.generic.TemplateView):
         return render(request, self.template_name, context)
 
 class TeamsView(django.views.generic.TemplateView):
-    """Render 'about.html' template."""
+    """Render 'teams.html' template."""
 
     template_name = 'teams.html'
     form_class = TeamForm
 
+    #edit info about team
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name,
                       {'teams': Team.objects.all()})
@@ -102,8 +107,9 @@ class TeamsView(django.views.generic.TemplateView):
 
 
 class NewsView(django.views.generic.TemplateView):
-    """Render 'about.html' template."""
+    """Render 'news.html' template."""
 
+    #static page
     template_name = 'news.html'
     def get(self, request, *args, **kwargs):
         context=''
@@ -111,8 +117,9 @@ class NewsView(django.views.generic.TemplateView):
 
 
 class TournamentListView(django.views.generic.TemplateView):
-    """Render 'about.html' template."""
+    """Render 'tournament_list.html' template."""
 
+    #CRUD operations with tournaments
     template_name = 'tournament_list.html'
     form_class = TournamentForm
     def get(self, request, *args, **kwargs):
@@ -132,12 +139,13 @@ class TournamentListView(django.views.generic.TemplateView):
 
 class AdminView(django.views.generic.TemplateView):
 
+    # CRUD operations with tournaments
     template_name = 'admin.html'
     context = {'tournaments':Tournament.objects.all()}
 
     def get(self, request, *args, **kwargs):
         template_name = 'admin.html'
-        context = {'tournaments': Tournament.objects.filter(status='new'),
+        context = {'tournaments': Tournament.objects.all(),
                    'teams': Team.objects.all()}
         return render(request, template_name, context)
 
@@ -164,13 +172,13 @@ class EditTournamentView(django.views.generic.TemplateView):
         return render(request, self.template_name, context)
 
     def post(self, request, tournament_id, *args, **kwargs):
-        form = CreateTournamentForm(self.request.POST)
-        if form.is_valid():
-            Tournament.objects.filter(id=tournament_id).update(status=form['status'], loops_quantity=form['loops_quantity'], name=form['name'], tournament_type=form['tournament_type'])
-            return HttpResponseRedirect(urls.reverse_lazy('edit_tournament', args=[
-                tournament_id]))
-        else:
-            return HttpResponseRedirect(urls.reverse_lazy('index'))
+        form = self.request.POST
+        #if form.is_valid():
+        Tournament.objects.filter(id=tournament_id).update(loops_quantity=form['loops'], name=form['name'], tournament_type=form['tournament_type'], status=form['status'])
+        return HttpResponseRedirect(urls.reverse_lazy('edit_tournament', args=[
+            tournament_id]))
+        #else:
+            #return HttpResponseRedirect(urls.reverse_lazy('index'))
 
 class DeleteTournamentView(django.views.generic.TemplateView):
     template_name = 'delete_tournament.html'
@@ -184,6 +192,8 @@ class DeleteTournamentView(django.views.generic.TemplateView):
 
 
 class AddTeamView(django.views.generic.TemplateView):
+
+    #Add team into tournament from list of teams
     template_name = 'add_team.html'
     def get(self, request, tournament_id):
         name=''
